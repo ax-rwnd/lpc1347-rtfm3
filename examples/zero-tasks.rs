@@ -6,7 +6,7 @@
 #![no_std]
 
 extern crate cortex_m_rtfm as rtfm; // IMPORTANT always do this rename
-extern crate stm32f103xx; // the device crate
+extern crate lpc1347; // the device crate
 
 // import the procedural macro
 use rtfm::app;
@@ -17,7 +17,7 @@ use rtfm::app;
 // `main` yourself.
 app! {
     // this is the path to the device crate
-    device: stm32f103xx,
+    device: lpc1347,
 }
 
 // The initialization phase.
@@ -26,10 +26,7 @@ app! {
 // this function.
 fn init(p: init::Peripherals) {
     // This function has access to all the peripherals of the device
-    p.core.SYST;
-    p.device.GPIOA;
-    p.device.RCC;
-    // ..
+    p.device.USART;
 }
 
 // The idle loop.
