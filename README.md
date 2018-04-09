@@ -1,11 +1,6 @@
-[![crates.io](https://img.shields.io/crates/v/cortex-m-rtfm.svg)](https://crates.io/crates/cortex-m-rtfm)
-[![crates.io](https://img.shields.io/crates/d/cortex-m-rtfm.svg)](https://crates.io/crates/cortex-m-rtfm)
+# `lpc1347_rtfm3`
 
-# `cortex-m-rtfm`
-
-> Real Time For the Masses (RTFM) framework for ARM Cortex-M microcontrollers
-
-# [Documentation](https://docs.rs/cortex-m-rtfm)
+> Real Time For the Masses (RTFM) framework for NXP LPC1347 microcontrollers.
 
 # License
 

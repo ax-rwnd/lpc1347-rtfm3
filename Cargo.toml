@@ -1,19 +1,20 @@
 [package]
 authors = [
-  "Jorge Aparicio <jorge@japaric.io>",
-  "Per Lindgren <per.lindgren@ltu.se>",
+  "Axel Sundbom <axel-sundbom@hotmail.com>",
 ]
-categories = ["concurrency", "embedded", "no-std"]
-description = "Real Time For the Masses (RTFM) framework for ARM Cortex-M microcontrollers"
-documentation = "https://docs.rs/cortex-m-rtfm"
+categories = ["concurrency", "embedded", "no-std", "lpc1347", "rtfm"]
+description = "RTFMv3 Support Crate for LPC1347"
+documentation = ""
 keywords = ["arm", "cortex-m"]
 license = "MIT OR Apache-2.0"
-name = "cortex-m-rtfm"
-repository = "https://github.com/japaric/cortex-m-rtfm"
-version = "0.3.1"
+name = "lpc1347_rtfm3"
+repository = "https://github.com/ax-rwnd/lpc1347-rtfm3.git"
+version = "0.0.1"
 
 [dependencies]
 cortex-m = "0.4.0"
+cortex-m-semihosting = "^0.2.0"
+cortex-m-rtfm = "0.3.1"
 cortex-m-rtfm-macros = { path = "macros", version = "0.3.0" }
 rtfm-core = "0.2.0"
 untagged-option = "0.1.1"
@@ -25,9 +26,10 @@ compiletest_rs = "0.3.5"
 features = ["abort-on-panic"]
 version = "0.3.9"
 
-[dev-dependencies.stm32f103xx]
+[dependencies.lpc1347]
 features = ["rt"]
-version = "0.8.0"
+version = "=0.1.5"
+git = "https://github.com/ax-rwnd/rust-lpc1347.git"
 
 [features]
 cm7-r0p1 = ["cortex-m/cm7-r0p1"]
