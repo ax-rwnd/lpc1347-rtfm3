@@ -40,7 +40,7 @@ pub enum MatchReg {
 /// timers::set_enabled(&p.CT16B0, &p.CT16B1, Timer16::Timer0, true);
 /// unsafe { timers::set_match(&p.CT16B0, &p.CT16B1, Timer16::Timer0, MatchReg::Reg0, 2u16); }
 /// ```
-pub fn init(syscon: &lpc1347::SYSCON, mut nvic: lpc1347::NVIC, timer: Timer16) {
+pub fn init(syscon: &lpc1347::SYSCON, nvic: &mut lpc1347::NVIC, timer: Timer16) {
     match timer {
         Timer16::Timer0 => {
             syscon.sysahbclkctrl.modify(|_, w| w.ct16b0().bit(true));

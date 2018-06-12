@@ -99,8 +99,10 @@ pub fn init(
         unsafe {
             usart
                 .dlm
+                .dlm
                 .modify(|_, w| w.dlmsb().bits((fdiv / 256u32) as u8));
             usart
+                .dll
                 .dll
                 .modify(|_, w| w.dllsb().bits((fdiv % 256u32) as u8));
         }
@@ -110,9 +112,11 @@ pub fn init(
     usart.lcr.modify(|_, w| w.dlab().bit(false));
 
     // Enable and clear FIFO
-    usart.fcr.write(|w| w.fifoen().bit(true));
-    usart.fcr.write(|w| w.rxfifores().bit(true));
-    usart.fcr.write(|w| w.txfifores().bit(true));
+    unsafe {
+        usart.fcr.fcr.write(|w| w.fifoen().bit(true));
+        usart.fcr.fcr.write(|w| w.rxfifores().bit(true));
+        usart.fcr.fcr.write(|w| w.txfifores().bit(true));
+    }
 
     // Enable auto RTS/CTS
     if flow_control {
@@ -124,13 +128,17 @@ pub fn init(
     while !usart.lsr.read().temt().bit() && !usart.lsr.read().thre().bit() {}
     while usart.lsr.read().rdr().bit() {
         // Dump data
-        let _register_value = usart.rbr.read().bits();
+        unsafe {
+            let _register_value = usart.dll.rbr.read().bits();
+        }
     }
 
     // Turn on USART once config is complete
     nvic.enable(USART);
-    usart.ier.modify(|_, w| w.rbrinten().bit(true));
-    usart.ier.modify(|_, w| w.rlsinten().bit(true));
+    unsafe {
+        usart.dlm.ier.modify(|_, w| w.rbrinten().bit(true));
+        usart.dlm.ier.modify(|_, w| w.rlsinten().bit(true));
+    }
 }
 
 /// Send an arbitrary region of data over USART
@@ -143,7 +151,7 @@ pub unsafe fn send(usart: &lpc1347::USART, buffer: *mut u8, length: isize) {
     let mut pos: isize = 0;
     while pos < length {
         while !usart.lsr.read().thre().bit() {}
-        usart.thr.write(|w| w.thr().bits(*buffer.offset(pos)));
+        usart.dll.thr.write(|w| w.thr().bits(*buffer.offset(pos)));
         pos += 1;
     }
 }
@@ -152,45 +160,47 @@ pub unsafe fn send(usart: &lpc1347::USART, buffer: *mut u8, length: isize) {
 pub fn send_byte(usart: &lpc1347::USART, byte: u8) {
     while !usart.lsr.read().thre().bit() {}
     unsafe {
-        usart.thr.write(|w| w.thr().bits(byte));
+        usart.dll.thr.write(|w| w.thr().bits(byte));
     }
 }
 
 /// Scaffold for interrupt handling
 pub fn handle_interrupt(usart: &lpc1347::USART, pcb: &mut Pcb) {
     // Check Receiver Line Status
-    let iir = usart.iir.read();
-    match iir.intid().bits() {
-        0b101 => {
-            // Detect errors
-            let lsr = usart.lsr.read();
-            if lsr.oe().bit() || lsr.pe().bit() || lsr.fe().bit() || lsr.rxfe().bit()
-                || lsr.bi().bit()
-            {
-                pcb.status = lsr.bits();
-                let _dummy = usart.rbr.read();
-                return;
-            }
+    unsafe {
+        let iir = usart.fcr.iir.read();
+        match iir.intid().bits() {
+            0b101 => {
+                // Detect errors
+                let lsr = usart.lsr.read();
+                if lsr.oe().bit() || lsr.pe().bit() || lsr.fe().bit() || lsr.rxfe().bit()
+                    || lsr.bi().bit()
+                {
+                    pcb.status = lsr.bits();
+                    let _dummy = usart.dll.rbr.read();
+                    return;
+                }
 
-            if lsr.rdr().bit() {
+                if lsr.rdr().bit() {
+                    // TODO: write to buffer
+                }
+            }
+            0b10 => {
                 // TODO: write to buffer
             }
-        }
-        0b10 => {
-            // TODO: write to buffer
-        }
-        0b110 => {
-            pcb.status |= 0x100;
-        }
-        0b1 => {
-            let lsr = usart.lsr.read();
-            if lsr.thre().bit() {
-                pcb.tx_data = 0;
-            } else {
-                pcb.tx_data = 1;
+            0b110 => {
+                pcb.status |= 0x100;
             }
+            0b1 => {
+                let lsr = usart.lsr.read();
+                if lsr.thre().bit() {
+                    pcb.tx_data = 0;
+                } else {
+                    pcb.tx_data = 1;
+                }
+            }
+            _ => {}
         }
-        _ => {}
     }
 }
 
