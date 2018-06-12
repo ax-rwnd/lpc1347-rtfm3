@@ -1,11 +1,21 @@
 #![deny(overflowing_literals)]
-#![feature(proc_macro)]
+#![feature(proc_macro, proc_macro_gen, lang_items)]
 #![no_std]
+
+// #TODO For testing custom start
+#![feature(start)]
+
+extern crate panic_abort;
 
 extern crate cortex_m;
 extern crate cortex_m_rtfm as rtfm;
 extern crate cortex_m_semihosting;
 extern crate lpc1347_rtfm3 as lpc;
+
+// #TODO cortex-m-rt most likely not needed here
+#[macro_use(exception)]
+extern crate cortex_m_rt as rt;
+use rt::ExceptionFrame;
 
 use rtfm::{app, Threshold, wfi};
 use cortex_m_semihosting::hio;
@@ -16,6 +26,27 @@ use lpc::lpc1347::{GPIO_PORT};
 use lpc::gpio;
 use lpc::timers16;
 use lpc::timers16::{Timer16, MatchReg};
+
+// #TODO Manual start lang item
+#[start]
+fn main_start(_argc: isize, _argv: *const *const u8) -> isize {
+    main();
+
+    0
+}
+
+// define the default exception handler
+exception!(*, default_handler);
+fn default_handler(irqn: i16) {
+    panic!("unhandled exception (IRQn={})", irqn);
+}
+
+// define the hard fault handler
+exception!(HardFault, hard_fault);
+fn hard_fault(ef: &ExceptionFrame) -> ! {
+    panic!("{:#?}", ef);
+}
+
 
 app! {
     device: lpc1347,
@@ -33,7 +64,7 @@ app! {
     }
 }
 
-fn init(p: init::Peripherals) -> init::LateResources {
+fn init(mut p: init::Peripherals) -> init::LateResources {
     {
         let mut stdout = hio::hstdout().unwrap();
         let _ = writeln!(stdout, "Initializing...");
@@ -46,7 +77,7 @@ fn init(p: init::Peripherals) -> init::LateResources {
 
     // Clock 0 setup
     timers16::reset(&p.device.CT16B0, &p.device.CT16B1, Timer16::Timer0);
-    timers16::init(&p.device.SYSCON, p.core.NVIC, Timer16::Timer0);
+    timers16::init(&p.device.SYSCON, &mut p.core.NVIC, Timer16::Timer0);
     timers16::set_interrupt(&p.device.CT16B0, &p.device.CT16B1, Timer16::Timer0, MatchReg::Reg0, true);
     timers16::set_enabled(&p.device.CT16B0, &p.device.CT16B1, Timer16::Timer0, true);
     timers16::set_match(&p.device.CT16B0, &p.device.CT16B1, Timer16::Timer0, MatchReg::Reg0, 2u16);
