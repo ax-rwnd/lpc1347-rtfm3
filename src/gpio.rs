@@ -8,8 +8,7 @@ use lpc1347::Interrupt::{PIN_INT0, PIN_INT1, PIN_INT2, PIN_INT3, PIN_INT4, PIN_I
 macro_rules! write_reg {
     ($field: expr, $bitpos: expr, $value: expr) => {{
         unsafe {
-            //$field.write(|w| w.bits($value << $bitpos));
-            $field.modify(|_, w| w.bits($value << $bitpos));
+            $field.write(|w| w.bits($value << $bitpos));
         }
     }};
 }
@@ -222,10 +221,10 @@ pub fn set_grouped_interrupt() {
 pub fn get_pin_value(gpio_port: &lpc1347::GPIO_PORT, port: Port, bitpos: u32) -> bool {
     match port {
         Port::Port0 => {
-            return gpio_port.set[0].read().bits() & (1 << bitpos) > 0;
+            return gpio_port.pin[0].read().bits() & (1 << bitpos) > 0;
         }
         Port::Port1 => {
-            return gpio_port.set[1].read().bits() & (1 << bitpos) > 0;
+            return gpio_port.pin[1].read().bits() & (1 << bitpos) > 0;
         }
     }
 }
@@ -234,10 +233,15 @@ pub fn get_pin_value(gpio_port: &lpc1347::GPIO_PORT, port: Port, bitpos: u32) ->
 pub fn set_pin_value(gpio_port: &lpc1347::GPIO_PORT, port: Port, bitpos: u32, value: bool) {
     match port {
         Port::Port0 => {
-            write_reg!(gpio_port.set[0], bitpos, if value { 1 } else { 0 });
+            unsafe {
+                gpio_port.b[bitpos as usize].write(|w| w.bits(if value { 1 } else { 0 }));
+            }
         }
         Port::Port1 => {
-            write_reg!(gpio_port.set[1], bitpos, if value { 1 } else { 0 });
+            let port_offset = 32;
+            unsafe {
+                gpio_port.b[port_offset + bitpos as usize].write(|w| w.bits(if value { 1 } else { 0 }));
+            }
         }
     }
 }
