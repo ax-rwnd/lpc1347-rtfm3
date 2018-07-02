@@ -214,6 +214,44 @@ pub fn set_interrupt_t1(
     }
 }
 
+/// Clear interrupt
+///
+/// # Arguments
+/// * `mr` - Selects the MatchReg
+///
+/// # Example
+/// ```
+/// // Clear the timer interrupt
+/// timers::clear_interrupt_t1(&p.device.CT32B1, MatchReg::Reg0);
+/// ```
+pub fn clear_interrupt_t0(
+    ct32b0: &lpc1347::CT32B0,
+    mr: MatchReg,
+) {
+    unsafe {
+        ct32b0.ir.write(|w| w.bits(1 << mr as u32));
+    }
+}
+
+/// Clear interrupt
+///
+/// # Arguments
+/// * `mr` - Selects the MatchReg
+///
+/// # Example
+/// ```
+/// // Clear the timer interrupt
+/// timers::clear_interrupt_t1(&p.device.CT32B1, MatchReg::Reg0);
+/// ```
+pub fn clear_interrupt_t1(
+    ct32b1: &lpc1347::CT32B1,
+    mr: MatchReg,
+) {
+    unsafe {
+        ct32b1.ir.write(|w| w.bits(1 << mr as u32));
+    }
+}
+
 /// Set a prescale-register value for the first clock
 ///
 /// # Example
