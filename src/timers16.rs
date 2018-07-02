@@ -17,13 +17,13 @@ pub enum Timer {
 #[derive(Copy, Clone)]
 pub enum MatchReg {
     /// Specifies match register 0
-    Reg0,
+    Reg0 = 0,
     /// Specifies match register 1
-    Reg1,
+    Reg1 = 1,
     /// Specifies match register 2
-    Reg2,
+    Reg2 = 2,
     /// Specifies match register 3
-    Reg3,
+    Reg3 = 3,
 }
 
 /// Specify PWM-mode
@@ -53,11 +53,11 @@ pub enum Control {
 pub fn init(syscon: &lpc1347::SYSCON, nvic: &mut lpc1347::NVIC, timer: Timer) {
     match timer {
         Timer::Timer0 => {
-            syscon.sysahbclkctrl.modify(|_, w| w.ct16b0().bit(true));
+            syscon.sysahbclkctrl.modify(|_, w| w.ct16b0().enable());
             nvic.enable(CT16B0);
         }
         Timer::Timer1 => {
-            syscon.sysahbclkctrl.modify(|_, w| w.ct16b1().bit(true));
+            syscon.sysahbclkctrl.modify(|_, w| w.ct16b1().enable());
             nvic.enable(CT16B1);
         }
     }
@@ -211,6 +211,44 @@ pub fn set_interrupt_t1(
             ct16b1.mcr.modify(|_, w| w.mr3r().bit(reset));
             ct16b1.mcr.modify(|_, w| w.mr3s().bit(stop));
         }
+    }
+}
+
+/// Clear interrupt
+///
+/// # Arguments
+/// * `mr` - Selects the MatchReg
+///
+/// # Example
+/// ```
+/// // Clear the timer interrupt
+/// timers::clear_interrupt_t1(&p.device.CT16B1, MatchReg::Reg0);
+/// ```
+pub fn clear_interrupt_t0(
+    ct16b0: &lpc1347::CT16B0,
+    mr: MatchReg,
+) {
+    unsafe {
+        ct16b0.ir.write(|w| w.bits(1 << mr as u32));
+    }
+}
+
+/// Clear interrupt
+///
+/// # Arguments
+/// * `mr` - Selects the MatchReg
+///
+/// # Example
+/// ```
+/// // Clear the timer interrupt
+/// timers::clear_interrupt_t1(&p.device.CT16B1, MatchReg::Reg0);
+/// ```
+pub fn clear_interrupt_t1(
+    ct16b1: &lpc1347::CT16B1,
+    mr: MatchReg,
+) {
+    unsafe {
+        ct16b1.ir.write(|w| w.bits(1 << mr as u32));
     }
 }
 
