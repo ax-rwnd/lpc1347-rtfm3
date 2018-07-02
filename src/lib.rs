@@ -37,7 +37,7 @@ pub mod clock;
 /// Repetetive-intterupt timer
 pub mod ritimer;
 
-/// In-application programmoing NOTE: untested
+/// In-application programming NOTE: untested
 pub mod iap;
 
 /// USART driver
