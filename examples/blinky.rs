@@ -23,6 +23,9 @@ use core::fmt::Write;
 use lpc::lpc1347;
 use lpc::lpc1347::{GPIO_PORT};
 
+// This is the resource, not the type
+use lpc::lpc1347::CT16B0 as CT16B0_RES;
+
 use lpc::gpio;
 use lpc::timers16;
 use lpc::timers16::{Timer, MatchReg};
@@ -41,6 +44,7 @@ fn default_handler(irqn: i16) {
     panic!("unhandled exception (IRQn={})", irqn);
 }
 
+
 // define the hard fault handler
 exception!(HardFault, hard_fault);
 fn hard_fault(ef: &ExceptionFrame) -> ! {
@@ -53,13 +57,14 @@ app! {
 
     resources: {
         static GPIO_PORT: GPIO_PORT;
+        static CT16B0_RES: CT16B0_RES;
     },
 
     tasks: {
         CT16B0: {
             path: clock0_tick,
             priority: 1,
-            resources: [GPIO_PORT],
+            resources: [GPIO_PORT, CT16B0_RES],
         },
     }
 }
@@ -67,28 +72,37 @@ app! {
 fn init(mut p: init::Peripherals) -> init::LateResources {
     {
         let mut stdout = hio::hstdout().unwrap();
-        let _ = writeln!(stdout, "Initializing...");
+        writeln!(stdout, "Initializing...").unwrap();
     }
+
+    p.device.SYSCON.sysahbclkctrl.modify(|_, w| w.iocon().enable());
 
     // Initialize GPIO and set pio0_3 to output
     gpio::init(&p.device.SYSCON, false, false);
     gpio::set_dir(&p.device.GPIO_PORT, gpio::Port::Port0, 3, true);
+    gpio::set_dir(&p.device.GPIO_PORT, gpio::Port::Port0, 4, true);
+    gpio::set_dir(&p.device.GPIO_PORT, gpio::Port::Port0, 5, true);
+    gpio::set_pin_value(&p.device.GPIO_PORT, gpio::Port::Port0, 5, true);
 
 
     // Clock 0 setup
+    // 24MHz systemclock, prescale 24000 and count to 1000
+    // 1Hz blink
     timers16::reset_t0(&p.device.CT16B0);
     timers16::init(&p.device.SYSCON, &mut p.core.NVIC, Timer::Timer0);
-    timers16::set_interrupt_t0(&p.device.CT16B0, MatchReg::Reg0, true, false, false);
+    timers16::set_interrupt_t0(&p.device.CT16B0, MatchReg::Reg0, true, true, false);
+    timers16::set_prescaler_t0(&p.device.CT16B0, 24_000);
     timers16::set_enabled_t0(&p.device.CT16B0, true);
-    timers16::set_match_t0(&p.device.CT16B0,  MatchReg::Reg0, 2u16);
+    timers16::set_match_t0(&p.device.CT16B0,  MatchReg::Reg0, 1000u16);
 
     {
         let mut stdout = hio::hstdout().unwrap();
-        let _ = writeln!(stdout, "Done");
+        writeln!(stdout, "Done").unwrap();
     }
 
     init::LateResources {
         GPIO_PORT: p.device.GPIO_PORT,
+        CT16B0_RES: p.device.CT16B0
     }
 }
 
@@ -99,7 +113,13 @@ fn idle() -> ! {
 }
 
 fn clock0_tick(_t: &mut Threshold, r: CT16B0::Resources) {
+
+    timers16::clear_interrupt_t0(&r.CT16B0_RES, MatchReg::Reg0);
+
     let mut stdout = hio::hstdout().unwrap();
-    let _ = writeln!(stdout, "Clock 0!");
+    writeln!(stdout, "Clock 0!").unwrap();
+
     r.GPIO_PORT.not[0].write(|w| w.notp3().bit(true));
+    r.GPIO_PORT.not[0].write(|w| w.notp4().bit(true));
+    r.GPIO_PORT.not[0].write(|w| w.notp5().bit(true));
 }
