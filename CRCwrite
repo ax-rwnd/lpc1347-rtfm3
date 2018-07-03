@@ -1,0 +1,26 @@
+#!/bin/bash
+
+if [ $# -eq 0 ]
+    then
+        echo "ERROR!"
+        echo "No arguments supplied"
+        echo "Give the filename of executable"
+        echo "If an example, prepend examples/name"
+        exit
+    fi
+
+PATHANDNAME=$1
+FILENAME=${PATHANDNAME##*/}
+echo "Working on $FILENAME"
+
+# Get a binary from the ELF-file
+arm-none-eabi-objcopy target/thumbv7m-none-eabi/debug/$1 -O binary $FILENAME.bin
+cp $FILENAME.bin $FILENAME-orig.bin
+# Calculate and insert CRC into the binary
+./lpcrc-linux $FILENAME.bin
+
+# Print the relevant bytes
+ORIG="$(hexdump -s 28 -n 4 $FILENAME-orig.bin | head -n 1)"
+echo "Orig: $ORIG"
+CRC="$(hexdump -s 28 -n 4 $FILENAME.bin | head -n 1)"
+echo "CRCd: $CRC"
