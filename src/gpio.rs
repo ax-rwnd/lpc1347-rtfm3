@@ -246,6 +246,18 @@ pub fn set_pin_value(gpio_port: &lpc1347::GPIO_PORT, port: Port, bitpos: u32, va
     }
 }
 
+/// Toggle value for pin
+pub fn toggle_pin_value(gpio_port: &lpc1347::GPIO_PORT, port: Port, bitpos: u32) {
+    match port {
+        Port::Port0 => {
+            write_reg!(&gpio_port.not[0], bitpos, 1);
+        }
+        Port::Port1 => {
+            write_reg!(&gpio_port.not[1], bitpos, 1);
+        }
+    }
+}
+
 /// Set pin direction
 ///
 /// # Arguments
