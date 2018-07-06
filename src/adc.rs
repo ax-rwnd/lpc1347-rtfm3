@@ -1,9 +1,6 @@
 #![allow(dead_code)]
 extern crate lpc1347;
 
-// ADC clock frequency
-const ADC_CLK: u32 = 4000000;
-
 /// Maps ADC channels to pins
 #[derive(Copy, Clone)]
 pub enum PinPos {
@@ -45,8 +42,8 @@ pub enum Capture {
 ///
 /// # Example
 /// ```
-/// // Configure ADC to read from pio0_16
-/// adc::init(&p.SYSCON, &p.ADC, 5u8, 48000000u32, false, false, Capture::Rising);
+/// // Configure ADC to read from pin 5
+/// adc::init(&p.SYSCON, &p.ADC, 5u8, 24000000u32, false, false, Capture::Rising);
 /// adc::set_adc_pin(&p.IOCON, adc::PinPos::Pin5);
 /// ```
 pub fn init(
@@ -75,9 +72,19 @@ pub fn init(
         adc.cr
             .modify(|r, w| w.sel().bits(r.sel().bits() | 1 << pinnum));
 
+        // Read the system clock divider
+        // to be able to calculate the clockdiv for ADC
+        // The quicker the better, requires about 31 cycles to complete
+        // Maximum frequency for 12 bit, 15.5MHz, 10 bit 31MHz
+
+        let clkdiv = syscon.sysahbclkdiv.read().div().bits() as u32;
+
         // Set ADC clock divider
-        adc.cr
-            .modify(|_, w| w.clkdiv().bits(((system_core_clock / ADC_CLK) - 1) as u8));
+        // ADC is driven on the APB bus
+        adc.cr.modify(|_, w| {
+            w.clkdiv()
+                .bits(((system_core_clock / (system_core_clock / clkdiv)) - 1) as u8)
+        });
         //adc.cr.modify(|_, w| w.clkdiv().bits(160u8));
     }
 
