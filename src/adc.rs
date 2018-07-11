@@ -65,7 +65,7 @@ pub fn init(
     syscon.sysahbclkctrl.modify(|_, w| w.adc().bit(true));
 
     // Stop the ADC
-    adc.cr.modify(|_, w| w.start().bits(0x0));
+    adc.cr.modify(|_, w| w.start().no_start_this_value());
 
     unsafe {
         // Select channels
@@ -85,11 +85,10 @@ pub fn init(
             w.clkdiv()
                 .bits(((system_core_clock / (system_core_clock / clkdiv)) - 1) as u8)
         });
-        //adc.cr.modify(|_, w| w.clkdiv().bits(160u8));
     }
 
     // Set software control
-    adc.cr.modify(|_, w| w.burst().bit(false));
+    adc.cr.modify(|_, w| w.burst().software_controlled_());
 
     // Set lowpower mode, if requested
     adc.cr.modify(|_, w| w.lpwrmode().bit(low_power));
@@ -100,10 +99,10 @@ pub fn init(
     // Set rising/falling edge
     match edge {
         Capture::Rising => {
-            adc.cr.modify(|_, w| w.edge().bit(false));
+            adc.cr.modify(|_, w| w.edge().rising());
         }
         Capture::Falling => {
-            adc.cr.modify(|_, w| w.edge().bit(true));
+            adc.cr.modify(|_, w| w.edge().falling());
         }
     }
 }
@@ -113,40 +112,48 @@ pub fn init(
 /// # Arguments
 /// * `pin` - The AD-pin to use (0-7)
 pub fn set_adc_pin(iocon: &lpc1347::IOCON, pin: PinPos) {
-    unsafe {
-        match pin {
-            PinPos::Pin0 => {
-                iocon.tdi_pio0_11.modify(|_, w| w.admode().bit(false));
-                iocon.tdi_pio0_11.modify(|_, w| w.func().bits(0x2));
-            }
-            PinPos::Pin1 => {
-                iocon.tms_pio0_12.modify(|_, w| w.admode().bit(false));
-                iocon.tms_pio0_12.modify(|_, w| w.func().bits(0x2));
-            }
-            PinPos::Pin2 => {
-                iocon.tdo_pio0_13.modify(|_, w| w.admode().bit(false));
-                iocon.tdo_pio0_13.modify(|_, w| w.func().bits(0x2));
-            }
-            PinPos::Pin3 => {
-                iocon.trst_pio0_14.modify(|_, w| w.admode().bit(false));
-                iocon.trst_pio0_14.modify(|_, w| w.func().bits(0x2));
-            }
-            PinPos::Pin4 => {
-                iocon.swdio_pio0_15.modify(|_, w| w.admode().bit(false));
-                iocon.swdio_pio0_15.modify(|_, w| w.func().bits(0x2));
-            }
-            PinPos::Pin5 => {
-                iocon.pio0_16.modify(|_, w| w.admode().bit(false));
-                iocon.pio0_16.modify(|_, w| w.func().bits(0x1));
-            }
-            PinPos::Pin6 => {
-                iocon.pio0_22.modify(|_, w| w.admode().bit(false));
-                iocon.pio0_22.modify(|_, w| w.func().bits(0x1));
-            }
-            PinPos::Pin7 => {
-                iocon.pio0_23.modify(|_, w| w.admode().bit(false));
-                iocon.pio0_23.modify(|_, w| w.func().bits(0x1));
-            }
+    match pin {
+        PinPos::Pin0 => {
+            iocon
+                .tdi_pio0_11
+                .modify(|_, w| w.admode().analog_input_mode_());
+            iocon.tdi_pio0_11.modify(|_, w| w.func().ad0_());
+        }
+        PinPos::Pin1 => {
+            iocon
+                .tms_pio0_12
+                .modify(|_, w| w.admode().analog_input_mode_());
+            iocon.tms_pio0_12.modify(|_, w| w.func().ad1_());
+        }
+        PinPos::Pin2 => {
+            iocon
+                .tdo_pio0_13
+                .modify(|_, w| w.admode().analog_input_mode_());
+            iocon.tdo_pio0_13.modify(|_, w| w.func().ad2_());
+        }
+        PinPos::Pin3 => {
+            iocon
+                .trst_pio0_14
+                .modify(|_, w| w.admode().analog_input_mode_());
+            iocon.trst_pio0_14.modify(|_, w| w.func().ad3_());
+        }
+        PinPos::Pin4 => {
+            iocon
+                .swdio_pio0_15
+                .modify(|_, w| w.admode().analog_input_mode_());
+            iocon.swdio_pio0_15.modify(|_, w| w.func().ad4_());
+        }
+        PinPos::Pin5 => {
+            iocon.pio0_16.modify(|_, w| w.admode().analog_input_mode_());
+            iocon.pio0_16.modify(|_, w| w.func().ad5_());
+        }
+        PinPos::Pin6 => {
+            iocon.pio0_22.modify(|_, w| w.admode().analog_input_mode_());
+            iocon.pio0_22.modify(|_, w| w.func().ad6_());
+        }
+        PinPos::Pin7 => {
+            iocon.pio0_23.modify(|_, w| w.admode().analog_input_mode_());
+            iocon.pio0_23.modify(|_, w| w.func().ad7_());
         }
     }
 }
@@ -164,7 +171,6 @@ pub fn set_adc_pin(iocon: &lpc1347::IOCON, pin: PinPos) {
 /// }
 /// ```
 pub fn read(adc: &lpc1347::ADC, channel: u8) -> u16 {
-    // TODO: yet to implement 10-bit mode and low-power mode
     if channel > 7 {
         panic!("invalid channel selected")
     }
@@ -172,8 +178,8 @@ pub fn read(adc: &lpc1347::ADC, channel: u8) -> u16 {
     // Start read on channel
     unsafe {
         adc.cr.modify(|_, w| w.sel().bits(1 << channel));
-        adc.cr.modify(|_, w| w.start().bits(0x1));
     }
+    adc.cr.modify(|_, w| w.start().start_conversion_now());
 
     // Read data
     let mut register_value;
@@ -190,18 +196,19 @@ pub fn read(adc: &lpc1347::ADC, channel: u8) -> u16 {
             _ => panic!("invalid channel selected!"),
         }
 
-        if register_value.done().bit() {
+        if register_value.done().bit_is_set() {
             break;
         }
     }
 
     // Stop conversion
-    adc.cr.modify(|_, w| w.start().bits(0x0));
+    adc.cr.modify(|_, w| w.start().no_start_this_value());
 
     // Return value, depends on 10-bit mode
-    if adc.cr.read().mode10bit().bit() {
-        return (register_value.v_vref().bits() >> 6) & 0x3FF;
+    if adc.cr.read().mode10bit().is_enable_the_10_bit_co() {
+        // In 10 bit mode, the two LSB bits are forced to 0, thus shift 2 steps
+        return (register_value.v_vref().bits() >> 2) & 0x3FF;
     } else {
-        return (register_value.v_vref().bits() >> 4) & 0xFFF;
+        return register_value.v_vref().bits() & 0xFFF;
     }
 }
