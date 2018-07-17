@@ -1,6 +1,6 @@
 [package]
 authors = [
-  "Axel Sundbom <axel-sundbom@hotmail.com>",
+  "Axel Sundbom <axel.sundbom@grepit.se>",
   "Henrik Tjäder <henrik@grepit.se>"
 ]
 categories = ["concurrency", "embedded", "no-std", "lpc1347", "rtfm"]
