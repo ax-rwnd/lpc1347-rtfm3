@@ -10,7 +10,7 @@ keywords = ["arm", "cortex-m"]
 license = "MIT OR Apache-2.0"
 name = "lpc1347_rtfm3"
 repository = "https://github.com/ax-rwnd/lpc1347-rtfm3.git"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies]
 cortex-m = "0.5.0"
@@ -24,7 +24,7 @@ panic-abort = "0.2.0"
 [target.'cfg(target_arch = "x86_64")'.dev-dependencies]
 compiletest_rs = "0.3.5"
 
-# Currently used only for the entry!/exception!
+# Used for the entry!/exception!
 [dependencies.cortex-m-rt]
 features = ["device"]
 version = "0.5.0"
@@ -32,12 +32,9 @@ version = "0.5.0"
 [dependencies.lpc1347]
 features = ["rt"]
 version = "0.2.0"
-#git = "https://github.com/afoht/rust-lpc1347.git"
-path = "../rust-lpc1347/"
+git = "https://github.com/ax-rwnd/rust-lpc1347.git"
 
 [dependencies.cortex-m-rtfm]
-version = "0.3.2"
-#git = "https://github.com/chocol4te/cortex-m-rtfm.git"
 path = "../cortex-m-rtfm/"
 
 [features]
