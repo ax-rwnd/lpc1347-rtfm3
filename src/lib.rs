@@ -11,7 +11,7 @@
 
 #![deny(missing_docs)]
 #![deny(warnings)]
-#![feature(proc_macro)]
+#![feature(use_extern_macro)]
 #![no_std]
 
 pub extern crate lpc1347;

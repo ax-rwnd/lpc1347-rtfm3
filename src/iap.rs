@@ -1,4 +1,3 @@
-#![feature(asm)]
 #![allow(dead_code)]
 
 extern crate core;
