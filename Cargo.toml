@@ -36,5 +36,9 @@ git = "https://github.com/ax-rwnd/rust-lpc1347.git"
 [features]
 cm7-r0p1 = ["cortex-m/cm7-r0p1"]
 
+[profile.dev]
+codegen-units = 1
+
 [profile.release]
 lto = true
+debug = true
