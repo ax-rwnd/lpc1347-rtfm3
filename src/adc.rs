@@ -77,7 +77,7 @@ pub fn init(
         // The quicker the better, requires about 31 cycles to complete
         // Maximum frequency for 12 bit, 15.5MHz, 10 bit 31MHz
 
-        let clkdiv = syscon.sysahbclkdiv.read().div().bits() as u32;
+        let clkdiv = u32::from(syscon.sysahbclkdiv.read().div().bits());
 
         // Set ADC clock divider
         // ADC is driven on the APB bus
@@ -207,8 +207,8 @@ pub fn read(adc: &lpc1347::ADC, channel: u8) -> u16 {
     // Return value, depends on 10-bit mode
     if adc.cr.read().mode10bit().is_enable_the_10_bit_co() {
         // In 10 bit mode, the two LSB bits are forced to 0, thus shift 2 steps
-        return (register_value.v_vref().bits() >> 2) & 0x3FF;
+        (register_value.v_vref().bits() >> 2) & 0x3FF
     } else {
-        return register_value.v_vref().bits() & 0xFFF;
+        register_value.v_vref().bits() & 0xFFF
     }
 }

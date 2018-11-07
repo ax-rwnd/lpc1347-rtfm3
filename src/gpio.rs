@@ -221,10 +221,10 @@ pub fn set_grouped_interrupt() {
 pub fn get_pin_value(gpio_port: &lpc1347::GPIO_PORT, port: Port, bitpos: u32) -> bool {
     match port {
         Port::Port0 => {
-            return gpio_port.pin[0].read().bits() & (1 << bitpos) > 0;
+            gpio_port.pin[0].read().bits() & (1 << bitpos) > 0
         }
         Port::Port1 => {
-            return gpio_port.pin[1].read().bits() & (1 << bitpos) > 0;
+            gpio_port.pin[1].read().bits() & (1 << bitpos) > 0
         }
     }
 }

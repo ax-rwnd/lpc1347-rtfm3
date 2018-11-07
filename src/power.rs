@@ -198,7 +198,7 @@ pub fn deep_power_down(pmu: &lpc1347::PMU, scb: &mut lpc1347::SCB) {
 pub fn set_wakeup_interrupt(
     syscon: &lpc1347::SYSCON,
     nvic: &mut lpc1347::NVIC,
-    interrupt: WakeupInts,
+    interrupt: &WakeupInts,
 ) {
     match interrupt {
         WakeupInts::Pin0 => {

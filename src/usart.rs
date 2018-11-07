@@ -94,7 +94,8 @@ pub fn init(
 
     // Setup baud rate
     {
-        let register_value: u32 = syscon.uartclkdiv.read().div().bits() as u32;
+        //let register_value: u32 = syscon.uartclkdiv.read().div().bits() as u32;
+        let register_value = u32::from(syscon.uartclkdiv.read().div().bits());
         let fdiv: u32 = ((12000u32 / register_value) / 16u32) / baudrate as u32;
         unsafe {
             usart
