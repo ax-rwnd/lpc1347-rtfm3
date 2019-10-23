@@ -270,14 +270,14 @@ pub fn set_dir(gpio_port: &lpc1347::GPIO_PORT, port: Port, bitpos: u32, output: 
             if output {
                 or_reg!(gpio_port.dir[0], bitpos, 1);
             } else {
-                neg_and_reg!(gpio_port.dir[0], bitpos, 0);
+                neg_and_reg!(gpio_port.dir[0], bitpos, 1);
             }
         }
         Port::Port1 => {
             if output {
                 or_reg!(gpio_port.dir[1], bitpos, 1);
             } else {
-                neg_and_reg!(gpio_port.dir[1], bitpos, 0);
+                neg_and_reg!(gpio_port.dir[1], bitpos, 1);
             }
         }
     }
